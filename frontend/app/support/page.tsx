@@ -17,8 +17,18 @@ function SupportPage() {
                 const res = await fetch(API_ENDPOINTS.TICKETS || '/api/tickets/', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+
+                if (!res.ok) {
+                    throw new Error(`API error: ${res.status}`);
+                }
+
                 const data = await res.json();
-                setTickets(data);
+                if (Array.isArray(data)) {
+                    setTickets(data);
+                } else {
+                    console.error('API did not return an array for tickets:', data);
+                    setTickets([]);
+                }
             } catch (err) {
                 console.error('Failed to fetch tickets:', err);
                 // Fallback mock
@@ -60,9 +70,9 @@ function SupportPage() {
                     <div className="divide-y divide-[#1a1a1a]">
                         {loading ? (
                             <div className="p-12 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest">Loading...</div>
-                        ) : tickets.length === 0 ? (
+                        ) : (Array.isArray(tickets) && tickets.length === 0) ? (
                             <div className="p-12 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest">No active tickets found</div>
-                        ) : (
+                        ) : Array.isArray(tickets) ? (
                             tickets.map((ticket) => (
                                 <div key={ticket.id} className="p-6 flex items-center justify-between hover:bg-white/5 transition-all cursor-pointer group">
                                     <div className="flex items-center gap-6">
@@ -90,6 +100,8 @@ function SupportPage() {
                                     </div>
                                 </div>
                             ))
+                        ) : (
+                            <div className="p-12 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest">Unable to load tickets</div>
                         )}
                     </div>
                 </div>

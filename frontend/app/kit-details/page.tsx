@@ -28,8 +28,13 @@ function KitDetailsPage() {
                 const res = await fetch(API_ENDPOINTS.KITS, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+
+                if (!res.ok) {
+                    throw new Error(`API error: ${res.status}`);
+                }
+
                 const data = await res.json();
-                if (data && data.length > 0) {
+                if (data && Array.isArray(data) && data.length > 0) {
                     setKit(data[0]);
                 } else {
                     setKit({

@@ -27,8 +27,18 @@ function ActivationsPage() {
                 const res = await fetch(`${API_ENDPOINTS.ACTIVATION_REQUESTS}?status=Pending`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+
+                if (!res.ok) {
+                    throw new Error(`API error: ${res.status}`);
+                }
+
                 const data = await res.json();
-                setRequests(data);
+                if (Array.isArray(data)) {
+                    setRequests(data);
+                } else {
+                    console.error('API did not return an array for activation requests:', data);
+                    setRequests([]);
+                }
             } catch (err) {
                 console.error('Failed to fetch activations:', err);
                 // Fallback mock
@@ -72,7 +82,7 @@ function ActivationsPage() {
                     <div className="divide-y divide-[#1a1a1a]">
                         {loading ? (
                             <div className="p-12 text-center text-[10px] font-black text-gray-500 uppercase tracking-widest">Synchronizing...</div>
-                        ) : requests.length === 0 ? (
+                        ) : (Array.isArray(requests) && requests.length === 0) ? (
                             <div className="p-12 text-center">
                                 <Box size={32} className="mx-auto text-gray-800 mb-4" />
                                 <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">No pending activations in queue</p>
@@ -80,7 +90,7 @@ function ActivationsPage() {
                                     Register New Hardware
                                 </button>
                             </div>
-                        ) : (
+                        ) : Array.isArray(requests) ? (
                             requests.map((request) => (
                                 <div key={request.id} className="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white/5 transition-all">
                                     <div className="flex items-center gap-6">
@@ -115,6 +125,11 @@ function ActivationsPage() {
                                     </div>
                                 </div>
                             ))
+                        ) : (
+                            <div className="p-12 text-center">
+                                <Box size={32} className="mx-auto text-gray-800 mb-4" />
+                                <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Unable to load activation requests</p>
+                            </div>
                         )}
                     </div>
                 </div>

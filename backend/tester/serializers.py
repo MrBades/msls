@@ -4,13 +4,13 @@ from .models import SpeedTestResult, StarlinkKit, Ticket, ActivationRequest
 class StarlinkKitSerializer(serializers.ModelSerializer):
     class Meta:
         model = StarlinkKit
-        fields = ['id', 'kit_id', 'nickname', 'assigned_user', 'status', 'service_address', 'latitude', 'longitude', 'created_at']
+        fields = ['id', 'kit_id', 'nickname', 'assigned_user', 'status', 'service_address', 'latitude', 'longitude', 'slug', 'created_at']
         read_only_fields = ['assigned_user', 'created_at']
 
 class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
-        fields = ['id', 'user', 'subject', 'description', 'status', 'created_at']
+        fields = ['id', 'user', 'subject', 'description', 'status', 'priority', 'created_at']
         read_only_fields = ['user', 'created_at']
 
 class ActivationRequestSerializer(serializers.ModelSerializer):

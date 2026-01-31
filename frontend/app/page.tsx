@@ -27,7 +27,7 @@ export default function Home() {
 
       <div className="relative z-10 w-full max-w-sm">
         <div className="flex justify-center mb-16">
-          <span className="text-white font-black text-2xl tracking-[0.3em] uppercase">STARLINK</span>
+          <span className="text-white font-black text-2xl tracking-[0.3em] uppercase">mystarlinkstats</span>
         </div>
 
         <div className="mb-8">
@@ -39,7 +39,7 @@ export default function Home() {
 
       <footer className="relative z-10 absolute bottom-8 w-full text-center">
         <p className="text-[10px] text-gray-700 uppercase tracking-widest font-bold">
-          STARLINK &copy; {new Date().getFullYear()}
+          mystarlinkstats &copy; {new Date().getFullYear()}
         </p>
       </footer>
     </div>

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { ChatWidget } from "@/components/ChatWidget";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Verified Starlink Network Tester",
+  title: "mystarlinkstats Network Tester",
   description: "Professional network diagnostics for Starlink users. Accurate, detailed, and verified speed tests.",
   icons: {
     icon: '/icon.png',
@@ -35,7 +35,7 @@ export default function RootLayout({
       >
         <PublicHeader />
         {children}
-        <ChatWidget />
+
       </body>
     </html>
   );

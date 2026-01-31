@@ -17,7 +17,12 @@ export function ChatWidget() {
 
     useEffect(() => {
         setMessages([
-            { id: 1, text: 'Welcome! How can we help you with network monitoring today?', sender: 'admin', timestamp: new Date() }
+            {
+                id: 1,
+                text: 'Welcome! How can we help you with network monitoring today?',
+                sender: 'admin',
+                timestamp: new Date()
+            }
         ]);
     }, []);
 
@@ -39,18 +44,19 @@ export function ChatWidget() {
         };
 
         setMessages(prev => [...prev, newUserMsg]);
+        const currentMessage = message;
         setMessage('');
 
         // Simulate admin reply
         setTimeout(() => {
             const adminReply: Msg = {
                 id: Date.now() + 1,
-                text: "Thanks for reaching out. An agent will be with you shortly.",
+                text: 'Welcome. We have received your inquiry regarding "' + currentMessage + '". A technical specialist is currently reviewing your telemetry logs from the last 24 hours.',
                 sender: 'admin',
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, adminReply]);
-        }, 2000);
+        }, 1500);
     };
 
     return (
@@ -72,8 +78,8 @@ export function ChatWidget() {
                         {messages.map((msg) => (
                             <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${msg.sender === 'user'
-                                        ? 'bg-cyan-600 text-white rounded-tr-sm'
-                                        : 'bg-gray-800 text-gray-200 rounded-tl-sm'
+                                    ? 'bg-cyan-600 text-white rounded-tr-sm'
+                                    : 'bg-gray-800 text-gray-200 rounded-tl-sm'
                                     }`}>
                                     {msg.text}
                                 </div>

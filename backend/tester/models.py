@@ -12,6 +12,7 @@ class StarlinkKit(models.Model):
     service_address = models.TextField(blank=True, null=True)
     latitude = models.FloatField(blank=True, null=True)
     longitude = models.FloatField(blank=True, null=True)
+    slug = models.SlugField(max_length=150, unique=True, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -29,6 +30,7 @@ class Ticket(models.Model):
     subject = models.CharField(max_length=255)
     description = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Open')
+    priority = models.CharField(max_length=20, default='Medium')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -42,6 +44,7 @@ class ActivationRequest(models.Model):
         ('Pending', 'Pending'),
         ('Approved', 'Approved'),
         ('Denied', 'Denied'),
+        ('Active', 'Active'),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="activation_requests")
     kit_id = models.CharField(max_length=100)

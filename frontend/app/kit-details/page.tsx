@@ -64,7 +64,7 @@ function KitDetailsPage() {
     if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white uppercase tracking-widest text-xs">Accessing hardware...</div>;
 
     return (
-        <div className="min-h-screen bg-black text-white pb-24 lg:pb-8 lg:pl-64">
+        <div className="min-h-screen bg-black text-white pb-24 lg:pb-8">
             <header className="p-6 border-b border-[#1a1a1a]">
                 <h1 className="text-xl font-black tracking-tighter uppercase">Hardware Details</h1>
                 <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">SN: {kit?.serial_number}</p>

@@ -51,7 +51,7 @@ export default function Signup() {
 
             <div className="relative z-10 w-full max-w-sm">
                 <div className="flex justify-center mb-16">
-                    <span className="text-white font-black text-2xl tracking-[0.3em] uppercase">STARLINK</span>
+                    <span className="text-white font-black text-2xl tracking-[0.3em] uppercase">mystarlinkstats</span>
                 </div>
 
                 <div className="mb-8">
@@ -118,7 +118,7 @@ export default function Signup() {
                     <div className="pt-4 text-center">
                         <p className="text-gray-600 text-[10px] uppercase tracking-widest font-bold">
                             Already have an account?{' '}
-                            <Link href="/login" className="text-white hover:underline transition-all underline-offset-4">
+                            <Link href="/" className="text-white hover:underline transition-all underline-offset-4">
                                 Sign In
                             </Link>
                         </p>
@@ -128,7 +128,7 @@ export default function Signup() {
 
             <footer className="relative z-10 absolute bottom-8 w-full text-center">
                 <p className="text-[10px] text-gray-700 uppercase tracking-widest font-bold">
-                    STARLINK &copy; {new Date().getFullYear()}
+                    mystarlinkstats &copy; {new Date().getFullYear()}
                 </p>
             </footer>
         </div>

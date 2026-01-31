@@ -77,7 +77,7 @@ export default function KitDashboard() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div className="flex items-center gap-4">
                         <h1 className="text-2xl font-black text-white flex items-center gap-3">
-                            Starlinks <Search size={22} className="text-gray-500 cursor-pointer hover:text-white transition-colors" />
+                            My Kits <Search size={22} className="text-gray-500 cursor-pointer hover:text-white transition-colors" />
                         </h1>
                     </div>
 

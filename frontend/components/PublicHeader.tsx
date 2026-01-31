@@ -19,6 +19,7 @@ export function PublicHeader() {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [showKycBanner, setShowKycBanner] = useState(true);
     const pathname = usePathname();
     const router = useRouter();
 
@@ -67,10 +68,21 @@ export function PublicHeader() {
 
                 {/* Right Actions */}
                 <div className="flex items-center gap-4">
-                    <button className="p-2 text-gray-400 hover:text-white transition-colors">
+                    {/* Mobile Menu Toggle - Show on mobile, hide on desktop */}
+                    <button
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        className="xl:hidden p-2 text-white hover:text-gray-300 transition-colors"
+                        aria-label="Toggle mobile menu"
+                    >
+                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+
+                    {/* Settings - Hide on small screens, show on larger screens */}
+                    <button className="hidden md:block p-2 text-gray-400 hover:text-white transition-colors">
                         <Settings size={18} />
                     </button>
 
+                    {/* User Menu - Hide username on small screens */}
                     <div className="relative">
                         <button
                             onClick={() => setShowUserMenu(!showUserMenu)}
@@ -79,7 +91,7 @@ export function PublicHeader() {
                             <div className="w-6 h-6 bg-[#3b4b5b] flex items-center justify-center text-[10px] font-bold text-orange-400 uppercase rounded-sm">
                                 KE
                             </div>
-                            <span className="text-[12px] font-bold text-white pr-2">Kubus Engineering</span>
+                            <span className="hidden sm:block text-[12px] font-bold text-white pr-2">Kubus Engineering</span>
                             <ChevronDown size={14} className={`text-gray-500 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
                         </button>
 
@@ -89,7 +101,7 @@ export function PublicHeader() {
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, y: 10 }}
-                                    className="absolute right-0 mt-2 w-48 bg-[#0f1a24] border border-[#ffffff1a] shadow-2xl py-2"
+                                    className="absolute right-0 mt-2 w-48 bg-[#0f1a24] border border-[#ffffff1a] shadow-2xl py-2 z-50"
                                 >
                                     <button
                                         onClick={() => router.push('/profile')}
@@ -116,14 +128,6 @@ export function PublicHeader() {
                             )}
                         </AnimatePresence>
                     </div>
-
-                    {/* Mobile Menu Toggle */}
-                    <button
-                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                        className="xl:hidden p-2 text-gray-400 hover:text-white transition-colors"
-                    >
-                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                    </button>
                 </div>
             </header>
 
@@ -157,15 +161,24 @@ export function PublicHeader() {
             </AnimatePresence>
 
             {/* Notification Banner */}
-            <div className="bg-[#1f1b1b] border-b border-[#ff4b4b33] px-6 py-2 flex items-center gap-4">
-                <div className="w-5 h-5 flex items-center justify-center bg-gray-900 rounded-full border border-gray-700">
-                    <span className="text-[10px] text-gray-400 font-bold italic font-serif">i</span>
+            {showKycBanner && (
+                <div className="bg-[#1f1b1b] border-b border-[#ff4b4b33] px-6 py-2 flex items-center gap-4">
+                    <div className="w-5 h-5 flex items-center justify-center bg-gray-900 rounded-full border border-gray-700">
+                        <span className="text-[10px] text-gray-400 font-bold italic font-serif">i</span>
+                    </div>
+                    <div className="flex-1">
+                        <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest mr-2 underline decoration-gray-700">ACTION REQUIRED: UPDATE YOUR KYC DETAILS</span>
+                        <span className="text-[11px] text-gray-600 font-bold uppercase tracking-tight">Please complete your KYC verification within 20 days to ensure uninterrupted access to the portal. <Link href="/kyc" className="text-gray-500 underline hover:text-white">Verify now.</Link></span>
+                    </div>
+                    <button
+                        onClick={() => setShowKycBanner(false)}
+                        className="p-1 text-gray-600 hover:text-white transition-colors"
+                        aria-label="Dismiss KYC notification"
+                    >
+                        <X size={16} />
+                    </button>
                 </div>
-                <div className="flex-1">
-                    <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest mr-2 underline decoration-gray-700">ACTION REQUIRED: UPDATE YOUR KYC DETAILS</span>
-                    <span className="text-[11px] text-gray-600 font-bold uppercase tracking-tight">Please complete your KYC verification within 20 days to ensure uninterrupted access to the portal. <Link href="/kyc" className="text-gray-500 underline hover:text-white">Verify now.</Link></span>
-                </div>
-            </div>
+            )}
         </div>
     );
 }

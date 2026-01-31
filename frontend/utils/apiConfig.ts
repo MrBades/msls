@@ -1,5 +1,5 @@
 
-export const API_BASE_URL = 'http://localhost:8000';
+export const API_BASE_URL = 'https://msls-bend.vercel.app';
 
 export const API_ENDPOINTS = {
     TOKEN: `${API_BASE_URL}/api/token/`,

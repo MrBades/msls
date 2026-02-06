@@ -97,7 +97,13 @@ const LOCATIONS = [
 ];
 
 // Mock Data for Graph
-const GRAPH_DATA = Array.from({ length: 14 }).map((_, i) => ({
+const EMPTY_GRAPH_DATA = Array.from({ length: 14 }).map((_, i) => ({
+    name: `${i + 1} Jan`,
+    priority: 0,
+    standard: 0
+}));
+
+const generateGraphData = () => Array.from({ length: 14 }).map((_, i) => ({
     name: `${i + 1} Jan`,
     priority: Math.floor(Math.random() * 100),
     standard: Math.floor(Math.random() * 400) + 100
@@ -133,17 +139,21 @@ export default function KitDashboard() {
 
     const runSpeedTest = () => {
         setSpeedTestStatus('running');
+        setDownloadSpeed(0);
+        setUploadSpeed(0);
         let progress = 0;
         const interval = setInterval(() => {
             progress += 5;
-            setDownloadSpeed(Math.floor(Math.random() * 100) + 50);
-            setUploadSpeed(Math.floor(Math.random() * 30) + 10);
+            // Simulated real-time jumps
+            setDownloadSpeed(Math.floor(Math.random() * 50) + 150);
+            setUploadSpeed(Math.floor(Math.random() * 50) + 200);
 
             if (progress >= 100) {
                 clearInterval(interval);
                 setSpeedTestStatus('complete');
-                setDownloadSpeed(124);
-                setUploadSpeed(25);
+                // Final result is also randomized and dynamic
+                setDownloadSpeed(parseFloat((Math.random() * (220 - 180) + 180).toFixed(2)));
+                setUploadSpeed(parseFloat((Math.random() * (280 - 230) + 230).toFixed(2)));
             }
         }, 100);
     };
@@ -161,6 +171,28 @@ export default function KitDashboard() {
     };
 
     const isPlaceholder = !selectedKit;
+
+    // Filter Logic for Terminal Search
+    const filteredLocations = LOCATIONS.map(loc => {
+        if (loc.restricted) return loc;
+
+        const filteredSubs = loc.subLocations.map(sub => {
+            if (sub.restricted) return sub;
+            const filteredKits = sub.kits.filter(kit =>
+                kit.nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                kit.name.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+            return { ...sub, kits: filteredKits };
+        });
+
+        const hasMatchingKits = filteredSubs.some(sub => sub.kits.length > 0);
+        const matchesLocationName = loc.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+        if (matchesLocationName || hasMatchingKits) {
+            return { ...loc, subLocations: filteredSubs };
+        }
+        return null;
+    }).filter(loc => loc !== null) as typeof LOCATIONS;
 
     return (
         <div className="min-h-screen bg-[#050b10] text-[#c3cfd9] pt-14 flex flex-col h-screen overflow-hidden">
@@ -233,7 +265,7 @@ export default function KitDashboard() {
 
                     {/* Tree List */}
                     <div className="flex-1 overflow-y-auto">
-                        {LOCATIONS.map(location => (
+                        {filteredLocations.map(location => (
                             <div key={location.id} className="border-b border-[#ffffff0d]">
                                 <button
                                     onClick={() => handleLocationClick(location.id, location.restricted)}
@@ -258,7 +290,10 @@ export default function KitDashboard() {
                                         >
                                             {location.subLocations.map(sub => (
                                                 <div key={sub.id}>
-                                                    <div className="px-6 py-2 bg-[#0f1923] border-b border-[#ffffff05] flex justify-between items-center text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                                    <div
+                                                        onClick={() => sub.id === 'k-class' && setDeniedPopupOpen(true)}
+                                                        className={`px-6 py-2 bg-[#0f1923] border-b border-[#ffffff05] flex justify-between items-center text-[10px] font-bold uppercase tracking-wider cursor-pointer transition-colors ${sub.id === 'k-class' ? 'hover:bg-[#1a2c3d] text-blue-400' : 'text-gray-400'}`}
+                                                    >
                                                         <span>{sub.name}</span>
                                                         {sub.restricted && <Lock size={10} />}
                                                     </div>
@@ -370,7 +405,7 @@ export default function KitDashboard() {
 
                             <div className="h-[250px] w-full mt-4">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart data={GRAPH_DATA} barGap={0}>
+                                    <BarChart data={isPlaceholder ? EMPTY_GRAPH_DATA : generateGraphData()} barGap={0}>
                                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#ffffff1a" />
                                         <XAxis
                                             dataKey="name"

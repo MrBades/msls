@@ -34,15 +34,15 @@ const MOCK_INVOICES: Invoice[] = [
     {
         id: '1',
         number: 'IN-284381',
-        date: '02 Dec, 2025',
-        dueDate: '02 Dec, 2025',
+        date: '10 Nov, 2025',
+        dueDate: '10 Nov, 2025',
         status: 'Paid',
         total: 165000.00,
         amountDue: 0,
         client: {
             name: 'Veritas University',
             address: 'Abuja, Nigeria',
-            email: 'billing@mystarlinkstats.ng'
+            email: 'billing@mystarlinkstats.com'
         },
         items: [
             { description: 'Starlink Business Plan - Dec 2025', qty: 1, rate: 159000.00, amount: 159000.00 },
@@ -52,15 +52,15 @@ const MOCK_INVOICES: Invoice[] = [
     {
         id: '2',
         number: 'IN-27964',
-        date: '02 Dec, 2025',
-        dueDate: '02 Dec, 2025',
+        date: '10 Dec, 2025',
+        dueDate: '10 Dec, 2025',
         status: 'Paid',
         total: 165000.00,
         amountDue: 0,
         client: {
             name: 'Veritas University',
             address: 'Abuja, Nigeria',
-            email: 'billing@mystarlinkstats.ng'
+            email: 'billing@mystarlinkstats.com'
         },
         items: [
             { description: 'Starlink Business Plan - Dec 2025', qty: 1, rate: 159000.00, amount: 159000.00 },
@@ -70,33 +70,33 @@ const MOCK_INVOICES: Invoice[] = [
     {
         id: '3',
         number: 'IN-284941',
-        date: '02 Dec, 2025',
-        dueDate: '02 Dec, 2025',
+        date: '10 Jan, 2025',
+        dueDate: '10 Jan, 2025',
         status: 'Paid',
         total: 165000.00,
         amountDue: 0,
         client: {
             name: 'Veritas University',
             address: 'Abuja, Nigeria',
-            email: 'billing@mystarlinkstats.ng'
+            email: 'billing@mystarlinkstats.com'
         },
         items: [
             { description: 'Starlink Business Plan - Dec 2025', qty: 1, rate: 159000.00, amount: 159000.00 },
             { description: 'VAT', qty: 1, rate: 6000.00, amount: 6000.00 }
         ]
     },
-       {
+    {
         id: '4',
         number: 'IN-284541',
-        date: '02 Dec, 2025',
-        dueDate: '02 Dec, 2025',
+        date: '10 Jan, 2025',
+        dueDate: '10 Jan, 2025',
         status: 'Paid',
         total: 165000.00,
         amountDue: 0,
         client: {
             name: 'Veritas University',
             address: 'Abuja, Nigeria',
-            email: 'billing@mystarlinkstats.ng'
+            email: 'billing@mystarlinkstats.com'
         },
         items: [
             { description: 'Starlink Business Plan - Dec 2025', qty: 1, rate: 159000.00, amount: 159000.00 },
@@ -107,16 +107,25 @@ const MOCK_INVOICES: Invoice[] = [
 
 function BillingPage() {
     const [invoices, setInvoices] = useState<Invoice[]>(MOCK_INVOICES);
+    const [searchQuery, setSearchQuery] = useState('');
     const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null); // For Modal
     const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null); // Invoice ID
     const [notification, setNotification] = useState<{ message: string; type: 'success' | 'info' } | null>(null);
 
-    const handleAction = (action: 'email' | 'download' | 'delete', invoice: Invoice) => {
+    const filteredInvoices = invoices.filter(invoice =>
+        invoice.number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        invoice.client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        invoice.client.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const handleAction = (action: 'download' | 'delete', invoice: Invoice) => {
         setActionMenuOpen(null);
-        if (action === 'email') {
-            setNotification({ message: `Invoice ${invoice.number} sent to ${invoice.client.email}`, type: 'success' });
-        } else if (action === 'download') {
-            setNotification({ message: `Downloading ${invoice.number}.pdf...`, type: 'info' });
+        if (action === 'download') {
+            setNotification({ message: `Preparing ${invoice.number} for download...`, type: 'info' });
+            setSelectedInvoice(invoice);
+            setTimeout(() => {
+                window.print();
+            }, 500);
         } else if (action === 'delete') {
             // In a real app we might confirm first
             setInvoices(invoices.filter(i => i.id !== invoice.id));
@@ -145,6 +154,8 @@ function BillingPage() {
                         <input
                             type="text"
                             placeholder="Search invoices..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
                             className="w-full bg-[#0a1219] border border-[#ffffff1a] rounded px-9 py-2.5 text-xs text-white focus:border-[#00a3ff] outline-none placeholder-gray-600"
                         />
                     </div>
@@ -166,7 +177,7 @@ function BillingPage() {
 
                 {/* Rows */}
                 <div className="divide-y divide-[#ffffff0d]">
-                    {invoices.map((invoice) => (
+                    {filteredInvoices.map((invoice) => (
                         <div
                             key={invoice.id}
                             className="relative grid grid-cols-12 gap-4 p-4 md:px-6 md:py-4 items-center hover:bg-[#ffffff05] transition-colors group"
@@ -239,12 +250,6 @@ function BillingPage() {
                                             className="absolute right-0 top-8 w-40 bg-[#0f1923] border border-[#ffffff1a] rounded shadow-2xl z-20 py-1"
                                         >
                                             <button
-                                                onClick={() => handleAction('email', invoice)}
-                                                className="w-full text-left px-4 py-2 text-[10px] font-bold uppercase text-gray-300 hover:bg-[#ffffff0a] hover:text-white flex items-center gap-2"
-                                            >
-                                                <Mail size={12} /> Email Invoice
-                                            </button>
-                                            <button
                                                 onClick={() => handleAction('download', invoice)}
                                                 className="w-full text-left px-4 py-2 text-[10px] font-bold uppercase text-gray-300 hover:bg-[#ffffff0a] hover:text-white flex items-center gap-2"
                                             >
@@ -263,7 +268,7 @@ function BillingPage() {
                             </div>
                         </div>
                     ))}
-                    {invoices.length === 0 && (
+                    {filteredInvoices.length === 0 && (
                         <div className="p-12 text-center text-gray-600 text-xs uppercase font-bold tracking-widest">
                             No invoices found
                         </div>
@@ -329,7 +334,7 @@ function BillingPage() {
                                         <div>
                                             <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mr-4">Status</span>
                                             <span className={`text-xs font-black uppercase px-2 py-0.5 rounded ${selectedInvoice.status === 'Paid' ? 'bg-green-100 text-green-700' :
-                                                    selectedInvoice.status === 'Overdue' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
+                                                selectedInvoice.status === 'Overdue' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'
                                                 }`}>
                                                 {selectedInvoice.status}
                                             </span>
@@ -381,15 +386,9 @@ function BillingPage() {
                                 <div className="mt-12 pt-8 border-t border-slate-100 flex gap-4 justify-end no-print">
                                     <button
                                         onClick={() => handleAction('download', selectedInvoice)}
-                                        className="px-6 py-2 border border-slate-200 rounded text-xs font-bold uppercase text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-2"
-                                    >
-                                        <Download size={14} /> Download PDF
-                                    </button>
-                                    <button
-                                        onClick={() => handleAction('email', selectedInvoice)}
                                         className="px-6 py-2 bg-[#00a3ff] hover:bg-[#0088d6] text-white rounded text-xs font-bold uppercase transition-colors shadow-lg flex items-center gap-2"
                                     >
-                                        <Mail size={14} /> Send Email
+                                        <Download size={14} /> Download PDF
                                     </button>
                                 </div>
                             </div>

@@ -30,18 +30,21 @@ function SpeedTestPage() {
                     }
                     return prev + 1;
                 });
-                setDownloadSpeed(Math.floor(Math.random() * 100) + 150); // Simulate 150-250 Mbps
+                setDownloadSpeed(Math.floor(Math.random() * 50) + 150);
             }, 50);
         } else if (status === 'testing_upload') {
             interval = setInterval(() => {
                 setProgress((prev) => {
                     if (prev >= 100) {
                         setStatus('complete');
+                        // Use dynamic results
+                        setDownloadSpeed(parseFloat((Math.random() * (220 - 180) + 180).toFixed(2)));
+                        setUploadSpeed(parseFloat((Math.random() * (280 - 230) + 230).toFixed(2)));
                         return 100;
                     }
                     return prev + 1;
                 });
-                setUploadSpeed(Math.floor(Math.random() * 20) + 15); // Simulate 15-35 Mbps
+                setUploadSpeed(Math.floor(Math.random() * 50) + 200);
             }, 50);
         }
 

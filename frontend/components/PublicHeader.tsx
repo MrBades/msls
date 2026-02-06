@@ -32,7 +32,7 @@ export function PublicHeader() {
         { name: 'Home', path: '/dashboard' },
         { name: 'Support', path: '/support' },
         { name: 'Billing', path: '/billing' },
-        
+
     ];
 
     const isAuthPage = pathname === '/' || pathname === '/login' || pathname === '/signup';
@@ -76,10 +76,6 @@ export function PublicHeader() {
                         {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                     </button>
 
-                    {/* Settings - Hide on small screens, show on larger screens */}
-                    <button className="hidden md:block p-2 text-gray-400 hover:text-white transition-colors">
-                        <Settings size={18} />
-                    </button>
 
                     {/* User Menu - Hide username on small screens */}
                     <div className="relative">

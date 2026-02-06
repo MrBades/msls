@@ -1,7 +1,7 @@
 import requests
 import sys
 
-BASE_URL = "http://localhost:8000"
+BASE_URL = "https://msls-bend.vercel.app"
 
 def run_verification():
     print("Verifying Backend API...")

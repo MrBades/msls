@@ -1,25 +1,28 @@
 {
-    "version": 2,
-    "builds": [
-        {
-            "src": "mystarlinkstats/wsgi.py",
-            "use": "@vercel/python",
-            "config": { "maxLambdaSize": "15mb", "runtime": "python3.12" }
-        },
-        {
-            "src": "build_files.sh",
-            "use": "@vercel/static-build",
-            "config": { "distDir": "staticfiles_build" }
-        }
-    ],
-    "routes": [
-        {
-            "src": "/static/(.*)",
-            "dest": "/static/$1"
-        },
-        {
-            "src": "/(.*)",
-            "dest": "mystarlinkstats/wsgi.py"
-        }
-    ]
+  "version": 2,
+  "env": {
+    "ENABLE_UV": "0",
+    "PYTHON_VERSION": "3.12"
+  },
+  "builds": [
+    {
+      "src": "mystarlinkstats/wsgi.py",
+      "use": "@vercel/python",
+      "config": { "maxLambdaSize": "15mb" }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "dest": "/static/$1"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "mystarlinkstats/wsgi.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "mystarlinkstats/wsgi.py"
+    }
+  ]
 }

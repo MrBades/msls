@@ -2,6 +2,7 @@
   "version": 2,
   "env": {
     "ENABLE_UV": "0",
+    "VERCEL_FORCE_NO_BUILD_CACHE": "1",
     "PYTHON_VERSION": "3.12"
   },
   "builds": [

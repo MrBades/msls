@@ -7,4 +7,4 @@ function AdminPage() {
     return <AdminKitTable />;
 }
 
-export default withAuth(AdminPage);
+export default withAuth(AdminPage, { isAdmin: true });

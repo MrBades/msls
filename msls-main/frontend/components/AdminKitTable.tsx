@@ -22,6 +22,7 @@ interface User {
     username: string;
     email: string;
     first_name: string;
+    is_staff: boolean;
     profile?: {
         must_change_password: boolean;
     };

@@ -17,7 +17,7 @@ import {
     Search
 } from 'lucide-react';
 
-interface User {
+interface AdminUser {
     id: number;
     username: string;
     email: string;
@@ -40,7 +40,7 @@ interface Kit {
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState<'kits' | 'users'>('kits');
     const [kits, setKits] = useState<Kit[]>([]);
-    const [users, setUsers] = useState<User[]>([]);
+    const [users, setUsers] = useState<AdminUser[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
@@ -314,7 +314,7 @@ export default function AdminDashboard() {
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-white/5">
-                                        {users.map(user => (
+                                        {users.map((user: AdminUser) => (
                                             <tr key={user.id} className="hover:bg-white/[0.02] transition-colors group">
                                                 <td className="px-6 py-5 text-white">{user.first_name || 'N/A'}</td>
                                                 <td className="px-6 py-5 text-gray-400">{user.email}</td>
@@ -390,7 +390,7 @@ export default function AdminDashboard() {
                                         required
                                     >
                                         <option value="" disabled className="bg-black">SELECT CLIENT ACCOUNT</option>
-                                        {users.map(u => (
+                                        {users.map((u: AdminUser) => (
                                             <option key={u.id} value={u.id} className="bg-black">{u.email} ({u.first_name})</option>
                                         ))}
                                     </select>

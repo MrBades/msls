@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Search,
@@ -12,6 +12,7 @@ import {
     LayoutDashboard,
     Maximize2,
     Download,
+    RefreshCcw,
     Map as MapIcon
 } from 'lucide-react';
 import {
@@ -30,7 +31,7 @@ interface Kit {
     id: string;
     name: string;
     nickname: string;
-    status: 'Active' | 'Not Active';
+    status: 'Active' | 'Not Active' | 'Connecting' | 'Offline';
     health: number;
     usage: number; // GB
     priorityUsage: number;
@@ -56,11 +57,11 @@ const generateVeritasKits = (): Kit[] => {
         id: `veritas-${i + 1}`,
         name: `Kubus Engineering ${i + 1}`,
         nickname: `Kubus Engineering ${i + 1}`,
-        status: 'Active',
+        status: 'Connecting', // Start as connecting
         health: Math.floor(Math.random() * 20) + 80,
-        usage: Math.floor(Math.random() * 500) + 100,
+        usage: i < 6 ? parseFloat(((Math.random() * 50 + 250) / 1024).toFixed(3)) : Math.floor(Math.random() * 500) + 100,
         priorityUsage: Math.floor(Math.random() * 300) + 50,
-        standardUsage: Math.floor(Math.random() * 800) + 200,
+        standardUsage: i < 6 ? parseFloat((Math.random() * 50 + 250).toFixed(2)) : (Math.floor(Math.random() * 800) + 200),
         ip: `192.168.1.${100 + i}`,
         mac: `00:1B:44:11:3A:B${i}`,
         lastSeen: 'Just now',
@@ -115,12 +116,64 @@ export default function KitDashboard() {
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedLocation, setExpandedLocation] = useState<string | null>('abuja');
     const [deniedPopupOpen, setDeniedPopupOpen] = useState(false);
+    const [connectingPopupOpen, setConnectingPopupOpen] = useState(false); // New popup for connecting
+    const [offlinePopupOpen, setOfflinePopupOpen] = useState(false); // New popup for offline
     const [isMobileListOpen, setIsMobileListOpen] = useState(true);
+    const [kits, setKits] = useState<Kit[]>(generateVeritasKits()); // Manage kits in state
 
     // Speed Test State
     const [speedTestStatus, setSpeedTestStatus] = useState<'idle' | 'running' | 'complete'>('idle');
     const [downloadSpeed, setDownloadSpeed] = useState(0);
     const [uploadSpeed, setUploadSpeed] = useState(0);
+
+    // Ping All Results State
+    const [pingResults, setPingResults] = useState<{ name: string; download: string; upload: string; status: string }[]>([]);
+    const [showPingModal, setShowPingModal] = useState(false);
+
+    // Initial Connection Logic
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setKits(prevKits => {
+                const newKits = [...prevKits];
+                const onlineCount = Math.floor(Math.random() * 4) + 12; // 12 to 15
+                const indices = Array.from({ length: newKits.length }, (_, i) => i);
+                const shuffled = indices.sort(() => 0.5 - Math.random());
+
+                shuffled.slice(0, onlineCount).forEach(idx => newKits[idx].status = 'Active');
+                shuffled.slice(onlineCount).forEach(idx => newKits[idx].status = 'Connecting');
+
+                // First two kits offline as requested
+                newKits[0].status = 'Offline';
+                newKits[1].status = 'Offline';
+
+                return newKits;
+            });
+        }, 3000); // 3 seconds "connecting" initially
+
+        return () => clearTimeout(timer);
+    }, []);
+
+    // Periodic Swap Logic
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setKits(prevKits => {
+                const newKits = [...prevKits];
+                const activeIndices = newKits.reduce((acc, kit, idx) => kit.status === 'Active' ? [...acc, idx] : acc, [] as number[]);
+                const connectingIndices = newKits.reduce((acc, kit, idx) => kit.status === 'Connecting' ? [...acc, idx] : acc, [] as number[]);
+
+                if (activeIndices.length > 0 && connectingIndices.length > 0) {
+                    const toConnecting = activeIndices[Math.floor(Math.random() * activeIndices.length)];
+                    const toActive = connectingIndices[Math.floor(Math.random() * connectingIndices.length)];
+
+                    newKits[toConnecting].status = 'Connecting';
+                    newKits[toActive].status = 'Active';
+                }
+                return newKits;
+            });
+        }, 300000); // Swap every 5 minutes (300,000ms) after first refresh
+
+        return () => clearInterval(interval);
+    }, []);
 
     const handleLocationClick = (locId: string, restricted: boolean) => {
         if (restricted) {
@@ -132,8 +185,18 @@ export default function KitDashboard() {
     };
 
     const handleKitClick = (kit: Kit) => {
+        if (kit.status === 'Offline') {
+            setOfflinePopupOpen(true);
+            return;
+        }
+        if (kit.status === 'Connecting') {
+            setConnectingPopupOpen(true);
+            return;
+        }
         setSelectedKit(kit);
         setSpeedTestStatus('idle'); // Reset speed test on kit change
+        setDownloadSpeed(0); // Clear old result
+        setUploadSpeed(0); // Clear old result
         setIsMobileListOpen(false); // Close mobile list
     };
 
@@ -144,18 +207,49 @@ export default function KitDashboard() {
         let progress = 0;
         const interval = setInterval(() => {
             progress += 5;
-            // Simulated real-time jumps
-            setDownloadSpeed(Math.floor(Math.random() * 50) + 150);
-            setUploadSpeed(Math.floor(Math.random() * 50) + 200);
+            setDownloadSpeed(Math.floor(Math.random() * 50) + 350); // Higher jump range
+            setUploadSpeed(Math.floor(Math.random() * 50) + 150);
 
             if (progress >= 100) {
                 clearInterval(interval);
                 setSpeedTestStatus('complete');
-                // Final result is also randomized and dynamic
-                setDownloadSpeed(parseFloat((Math.random() * (220 - 180) + 180).toFixed(2)));
+                const isKit3to6 = ['veritas-3', 'veritas-4', 'veritas-5', 'veritas-6'].includes(displayKit.id);
+                const finalDownload = isKit3to6 ? (Math.random() * (300 - 250) + 250) : (Math.random() * (420 - 380) + 380);
+                setDownloadSpeed(parseFloat(finalDownload.toFixed(2)));
                 setUploadSpeed(parseFloat((Math.random() * (280 - 230) + 230).toFixed(2)));
             }
         }, 100);
+    };
+
+    const handlePingAll = () => {
+        const results = kits.map(kit => {
+            const isKit3to6 = ['veritas-3', 'veritas-4', 'veritas-5', 'veritas-6'].includes(kit.id);
+            const downloadSpeedRandom = isKit3to6 ? (Math.random() * (300 - 250) + 250) : (Math.random() * (420 - 380) + 380);
+            return {
+                name: kit.nickname,
+                download: kit.status === 'Active' ? downloadSpeedRandom.toFixed(2) : (kit.status === 'Offline' ? 'OFFLINE' : '0.00'),
+                upload: kit.status === 'Active' ? (Math.random() * (280 - 230) + 230).toFixed(2) : (kit.status === 'Offline' ? 'OFFLINE' : '0.00'),
+                status: kit.status
+            };
+        });
+
+        setPingResults(results);
+        setShowPingModal(true);
+    };
+
+    const downloadPingResults = () => {
+        const csvContent = "data:text/csv;charset=utf-8,"
+            + "Kit Name,Status,Download (Mbps),Upload (Mbps)\n"
+            + pingResults.map(r => `${r.name},${r.status},${r.download},${r.upload}`).join("\n");
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        const date = new Date().toISOString().split('T')[0];
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `kit_ping_results_${date}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     // Derived Display Data
@@ -198,6 +292,73 @@ export default function KitDashboard() {
         <div className="min-h-screen bg-[#050b10] text-[#c3cfd9] pt-14 flex flex-col h-screen overflow-hidden">
             <div className="flex-1 flex overflow-hidden relative">
 
+                {/* Connecting Modal */}
+                <AnimatePresence>
+                    {connectingPopupOpen && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setConnectingPopupOpen(false)}
+                                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            />
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                className="relative bg-[#1a2c3d] border border-blue-500/30 p-8 rounded-lg shadow-2xl max-w-sm w-full text-center"
+                            >
+                                <div className="mx-auto w-12 h-12 bg-blue-500/20 text-blue-500 rounded-full flex items-center justify-center mb-4">
+                                    <RefreshCcw size={24} className="animate-spin" />
+                                </div>
+                                <h3 className="text-lg font-bold text-white mb-2">Connecting...</h3>
+                                <p className="text-gray-400 text-sm mb-6">This kit is establishing a secure connection. Please wait.</p>
+                                <button
+                                    onClick={() => setConnectingPopupOpen(false)}
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded font-medium transition-colors"
+                                >
+                                    Understood
+                                </button>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
+                {/* Offline Modal */}
+                <AnimatePresence>
+                    {offlinePopupOpen && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setOfflinePopupOpen(false)}
+                                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            />
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                className="relative bg-[#1a2c3d] border border-red-500/30 p-8 rounded-lg shadow-2xl max-w-sm w-full text-center"
+                            >
+                                <div className="mx-auto w-12 h-12 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mb-4">
+                                    <Lock size={24} />
+                                </div>
+                                <h3 className="text-lg font-bold text-white mb-2">Terminal Offline</h3>
+                                <p className="text-gray-400 text-sm mb-6">This terminal is currently offline. No statistics or speed tests are available.</p>
+                                <button
+                                    onClick={() => setOfflinePopupOpen(false)}
+                                    className="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded font-medium transition-colors"
+                                >
+                                    Understood
+                                </button>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
+
                 {/* Access Denied Modal */}
                 <AnimatePresence>
                     {deniedPopupOpen && (
@@ -226,6 +387,91 @@ export default function KitDashboard() {
                                 >
                                     Dismiss
                                 </button>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
+                {/* Ping All Results Modal */}
+                <AnimatePresence>
+                    {showPingModal && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                onClick={() => setShowPingModal(false)}
+                                className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                            />
+                            <motion.div
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: 20, opacity: 0 }}
+                                className="relative bg-[#0a1219] border border-[#ffffff1a] rounded-lg shadow-2xl max-w-4xl w-full max-h-[80vh] flex flex-col overflow-hidden"
+                            >
+                                <div className="p-6 border-b border-[#ffffff1a] flex items-center justify-between bg-[#0a1219]">
+                                    <div>
+                                        <h3 className="text-xl font-black uppercase text-white italic tracking-tighter">Network Status Scan</h3>
+                                        <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Real-time terminal diagnostic results</p>
+                                    </div>
+                                    <div className="flex gap-3">
+                                        <button
+                                            onClick={downloadPingResults}
+                                            className="bg-[#00a3ff] hover:bg-[#0088d6] text-white px-4 py-2 rounded text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-[0_0_15px_rgba(0,163,255,0.2)]"
+                                        >
+                                            <Download size={14} /> Download CSV
+                                        </button>
+                                        <button
+                                            onClick={() => setShowPingModal(false)}
+                                            className="bg-[#ffffff1a] hover:bg-[#ffffff26] text-white px-4 py-2 rounded text-[10px] font-black uppercase tracking-widest transition-all"
+                                        >
+                                            Close
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="flex-1 overflow-y-auto p-0">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead className="sticky top-0 bg-[#0f1923] text-[10px] uppercase font-black text-gray-500 tracking-widest border-b border-[#ffffff1a]">
+                                            <tr>
+                                                <th className="px-6 py-4">Terminal Name</th>
+                                                <th className="px-6 py-4 text-center">Status</th>
+                                                <th className="px-6 py-4 text-right">Download</th>
+                                                <th className="px-6 py-4 text-right">Upload</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-[#ffffff05]">
+                                            {pingResults.map((res, idx) => (
+                                                <tr key={idx} className="hover:bg-[#ffffff05] transition-colors group">
+                                                    <td className="px-6 py-4">
+                                                        <div className="text-sm font-bold text-white group-hover:text-[#00a3ff] transition-colors">{res.name}</div>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-center">
+                                                        <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${res.status === 'Active' ? 'bg-green-500/10 text-green-500 border border-green-500/20' :
+                                                            res.status === 'Offline' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+                                                                'bg-blue-500/10 text-blue-500 border border-blue-500/20'
+                                                            }`}>
+                                                            {res.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <span className={`text-xs font-mono font-bold ${res.download === 'OFFLINE' ? 'text-red-500/50' : 'text-gray-300'}`}>
+                                                            {res.download !== 'OFFLINE' ? `${res.download} Mbps` : '---'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <span className={`text-xs font-mono font-bold ${res.upload === 'OFFLINE' ? 'text-red-500/50' : 'text-gray-300'}`}>
+                                                            {res.upload !== 'OFFLINE' ? `${res.upload} Mbps` : '---'}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="p-4 bg-[#050b10] border-t border-[#ffffff1a] text-center">
+                                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-[0.2em]">End of Diagnostic Report — MSLS Terminal Control v2.4</p>
+                                </div>
                             </motion.div>
                         </div>
                     )}
@@ -299,22 +545,42 @@ export default function KitDashboard() {
                                                     </div>
                                                     {!sub.restricted && (
                                                         <>
-                                                            {sub.kits.map(kit => (
-                                                                <div
-                                                                    key={kit.id}
-                                                                    onClick={() => handleKitClick(kit)}
-                                                                    className={`
+                                                            {sub.id === 'veritas' && (
+                                                                <div className="px-6 py-3 border-b border-[#ffffff05]">
+                                                                    <button
+                                                                        onClick={handlePingAll}
+                                                                        className="w-full bg-[#00a3ff]/10 hover:bg-[#00a3ff]/20 border border-[#00a3ff]/30 text-[#00a3ff] py-2 rounded text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
+                                                                    >
+                                                                        <Zap size={14} /> Ping All
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                            {(sub.id === 'veritas' ? kits : sub.kits)
+                                                                .filter(kit =>
+                                                                    kit.nickname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                                                    kit.name.toLowerCase().includes(searchQuery.toLowerCase())
+                                                                ).map(kit => (
+                                                                    <div
+                                                                        key={kit.id}
+                                                                        onClick={() => handleKitClick(kit)}
+                                                                        className={`
                                                                         flex items-center justify-between px-8 py-3 cursor-pointer transition-colors border-l-2
                                                                         ${selectedKit?.id === kit.id ? 'bg-[#1a2c3d] border-l-blue-500' : 'hover:bg-[#ffffff05] border-l-transparent'}
                                                                     `}
-                                                                >
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_5px_limegreen]" />
-                                                                        <span className="text-xs font-medium text-gray-300">{kit.nickname}</span>
+                                                                    >
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className={`w-1.5 h-1.5 rounded-full ${kit.status === 'Active' ? 'bg-green-500 shadow-[0_0_5px_limegreen] animate-blink' :
+                                                                                kit.status === 'Connecting' ? 'bg-blue-500' : 'bg-gray-500'
+                                                                                }`} />
+                                                                            <span className="text-xs font-medium text-gray-300">{kit.nickname}</span>
+                                                                        </div>
+                                                                        <span className={`text-[9px] font-bold uppercase ${kit.status === 'Active' ? 'text-green-500' :
+                                                                            kit.status === 'Connecting' ? 'text-blue-500' : 'text-gray-500'
+                                                                            }`}>
+                                                                            {kit.status === 'Active' ? 'Online' : kit.status}
+                                                                        </span>
                                                                     </div>
-                                                                    <span className="text-[9px] font-bold text-green-500 uppercase">Online</span>
-                                                                </div>
-                                                            ))}
+                                                                ))}
                                                         </>
                                                     )}
                                                 </div>
@@ -502,16 +768,16 @@ export default function KitDashboard() {
                                 <Zap size={32} className="text-yellow-500 mb-4" />
                                 <h2 className="text-xl font-black uppercase text-white mb-8">Network Speed Test</h2>
 
-                                <div className="grid grid-cols-2 gap-16 w-full max-w-lg mb-8">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 w-full max-w-lg mb-8">
                                     <div>
                                         <div className="text-xs text-gray-500 uppercase font-bold mb-2">Download</div>
-                                        <div className="text-5xl font-mono text-white tracking-tighter">
+                                        <div className="text-4xl lg:text-5xl font-mono text-white tracking-tighter">
                                             {downloadSpeed} <span className="text-lg text-gray-600">Mbps</span>
                                         </div>
                                     </div>
                                     <div>
                                         <div className="text-xs text-gray-500 uppercase font-bold mb-2">Upload</div>
-                                        <div className="text-5xl font-mono text-white tracking-tighter">
+                                        <div className="text-4xl lg:text-5xl font-mono text-white tracking-tighter">
                                             {uploadSpeed} <span className="text-lg text-gray-600">Mbps</span>
                                         </div>
                                     </div>

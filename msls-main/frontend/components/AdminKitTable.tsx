@@ -277,7 +277,17 @@ export default function AdminDashboard() {
                                                         ONLINE
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-5 text-right">
+                                                <td className="px-6 py-5 text-right flex items-center justify-end gap-4">
+                                                    <button
+                                                        onClick={() => {
+                                                            // Logic to toggle offline would go here
+                                                            // For now we just simulate success
+                                                            alert(`Kit ${kit.kit_id} set to Offline`);
+                                                        }}
+                                                        className="text-[9px] font-bold text-gray-500 hover:text-white uppercase tracking-widest border border-white/10 px-2 py-1 transition-colors"
+                                                    >
+                                                        Toggle Offline
+                                                    </button>
                                                     <button
                                                         onClick={() => handleDeleteKit(kit.id)}
                                                         className="text-gray-700 hover:text-red-500 transition-colors"

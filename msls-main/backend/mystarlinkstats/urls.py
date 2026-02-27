@@ -22,10 +22,21 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from django.http import JsonResponse
+
+def catch_all_view(request, path=''):
+    return JsonResponse({
+        "error": "Not Found",
+        "message": f"Endpoint '{path}' not found on backend. Did you mean to visit the frontend?",
+        "hint": "Ensure you are using port 3000 for the frontend and port 8000 for the backend API."
+    }, status=404)
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     # Use 'api/' as the prefix for our API endpoints
     path("api/", include('tester.urls')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    # Catch-all
+    path('<path:path>', catch_all_view),
 ]

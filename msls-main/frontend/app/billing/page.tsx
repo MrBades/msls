@@ -45,7 +45,7 @@ const MOCK_INVOICES: Invoice[] = [
             email: 'billing@mystarlinkstats.com'
         },
         items: [
-            { description: 'Starlink Business Plan - Dec 2025', qty: 17, rate: 159000.00, amount: 2703000.00 },
+            { description: 'Starlink Business Plan - Nov 2025', qty: 17, rate: 159000.00, amount: 2703000.00 },
             { description: 'VAT', qty: 17, rate: 6000.00, amount: 102000.00 }
         ]
     },
@@ -70,8 +70,8 @@ const MOCK_INVOICES: Invoice[] = [
     {
         id: '3',
         number: 'IN-284941',
-        date: '10 Jan, 2025',
-        dueDate: '10 Jan, 2025',
+        date: '10 Jan, 2026',
+        dueDate: '10 Jan, 2026',
         status: 'Paid',
         total: 2805000.00,
         amountDue: 0,
@@ -81,17 +81,17 @@ const MOCK_INVOICES: Invoice[] = [
             email: 'billing@mystarlinkstats.com'
         },
         items: [
-            { description: 'Starlink Business Plan - Dec 2025', qty: 17, rate: 159000.00, amount: 2703000.00 },
+            { description: 'Starlink Business Plan - Jan 2026', qty: 17, rate: 159000.00, amount: 2703000.00 },
             { description: 'VAT', qty: 17, rate: 6000.00, amount: 102000.00 }
         ]
     },
     {
         id: '4',
         number: 'IN-284541',
-        date: '10 Jan, 2025',
-        dueDate: '10 Jan, 2025',
+        date: '10 Feb, 2026',
+        dueDate: '10 Feb, 2026',
         status: 'Paid',
-        total: 2805000.00,
+        total: 3500000.00,
         amountDue: 0,
         client: {
             name: 'Veritas University',
@@ -99,8 +99,8 @@ const MOCK_INVOICES: Invoice[] = [
             email: 'billing@mystarlinkstats.com'
         },
         items: [
-            { description: 'Starlink Business Plan - Dec 2025', qty: 17, rate: 159000.00, amount: 2703000.00 },
-            { description: 'VAT', qty: 17, rate: 6000.00, amount: 102000.00 }
+            { description: 'Starlink Business Plan - Feb 2026', qty: 17, rate: 176500.00, amount: 3000000.00 },
+            { description: 'VAT', qty: 17, rate: 29500.00, amount: 500000.00 }
         ]
     },
 ];

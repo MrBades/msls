@@ -213,7 +213,8 @@ export default function KitDashboard() {
             if (progress >= 100) {
                 clearInterval(interval);
                 setSpeedTestStatus('complete');
-                const isKit3to6 = ['veritas-3', 'veritas-4', 'veritas-5', 'veritas-6'].includes(displayKit.id);
+                //const isKit3to6 = ['veritas-3', 'veritas-4', 'veritas-5', 'veritas-6'].includes(displayKit.id);
+                const isKit3to6 = ['veritas-3', 'veritas-4', 'veritas-5', 'veritas-6'].includes((displayKit as any)?.id || '');
                 const finalDownload = isKit3to6 ? (Math.random() * (300 - 250) + 250) : (Math.random() * (420 - 380) + 380);
                 setDownloadSpeed(parseFloat(finalDownload.toFixed(2)));
                 setUploadSpeed(parseFloat((Math.random() * (280 - 230) + 230).toFixed(2)));

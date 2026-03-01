@@ -127,7 +127,7 @@ export default function KitDashboard() {
     const [uploadSpeed, setUploadSpeed] = useState(0);
 
     // Ping All Results State
-    const [pingResults, setPingResults] = useState<{ name: string; download: string; upload: string; status: string }[]>([]);
+    const [pingResults, setPingResults] = useState<{ name: string; download: string; upload: string; ping: string; status: string }[]>([]);
     const [showPingModal, setShowPingModal] = useState(false);
 
     // Initial Connection Logic
@@ -213,7 +213,8 @@ export default function KitDashboard() {
             if (progress >= 100) {
                 clearInterval(interval);
                 setSpeedTestStatus('complete');
-                const isKit3to6 = ['veritas-3', 'veritas-4', 'veritas-5', 'veritas-6'].includes(displayKit.id);
+                //const isKit3to6 = ['veritas-3', 'veritas-4', 'veritas-5', 'veritas-6'].includes(displayKit.id);
+                const isKit3to6 = ['veritas-3', 'veritas-4', 'veritas-5', 'veritas-6'].includes((displayKit as any)?.id || '');
                 const finalDownload = isKit3to6 ? (Math.random() * (300 - 250) + 250) : (Math.random() * (420 - 380) + 380);
                 setDownloadSpeed(parseFloat(finalDownload.toFixed(2)));
                 setUploadSpeed(parseFloat((Math.random() * (280 - 230) + 230).toFixed(2)));
@@ -221,26 +222,59 @@ export default function KitDashboard() {
         }, 100);
     };
 
-    const handlePingAll = () => {
-        const results = kits.map(kit => {
-            const isKit3to6 = ['veritas-3', 'veritas-4', 'veritas-5', 'veritas-6'].includes(kit.id);
-            const downloadSpeedRandom = isKit3to6 ? (Math.random() * (300 - 250) + 250) : (Math.random() * (420 - 380) + 380);
+    const handlePingAll = async () => {
+        const initialResults = kits.map(kit => {
+            let skipReason = '';
+            if (kit.status === 'Offline') skipReason = 'OFFLINE';
+            else if (kit.status === 'Connecting') skipReason = '--';
+            else if (kit.status !== 'Active') skipReason = '--';
+
             return {
                 name: kit.nickname,
-                download: kit.status === 'Active' ? downloadSpeedRandom.toFixed(2) : (kit.status === 'Offline' ? 'OFFLINE' : '0.00'),
-                upload: kit.status === 'Active' ? (Math.random() * (280 - 230) + 230).toFixed(2) : (kit.status === 'Offline' ? 'OFFLINE' : '0.00'),
+                download: kit.status === 'Active' ? 'WAITING...' : skipReason,
+                upload: kit.status === 'Active' ? 'WAITING...' : skipReason,
+                ping: kit.status === 'Active' ? 'WAITING...' : skipReason,
                 status: kit.status
             };
         });
 
-        setPingResults(results);
+        setPingResults(initialResults);
         setShowPingModal(true);
+
+        const activeKits = kits.filter(k => k.status === 'Active');
+
+        for (const kit of activeKits) {
+            setPingResults(prev => prev.map(res =>
+                res.name === kit.nickname
+                    ? { ...res, download: 'TESTING...', upload: 'TESTING...', ping: 'TESTING...' }
+                    : res
+            ));
+
+            const pingTime = Math.floor(Math.random() * (120 - 20) + 20);
+
+            await new Promise(resolve => setTimeout(resolve, 400 + Math.random() * 400));
+
+            const isKit3to6 = ['veritas-3', 'veritas-4', 'veritas-5', 'veritas-6'].includes(kit.id);
+            const downloadSpeedRandom = isKit3to6 ? (Math.random() * (300 - 250) + 250) : (Math.random() * (420 - 380) + 380);
+            const uploadSpeedRandom = (Math.random() * (280 - 230) + 230);
+
+            setPingResults(prev => prev.map(res =>
+                res.name === kit.nickname
+                    ? {
+                        ...res,
+                        download: downloadSpeedRandom.toFixed(2),
+                        upload: uploadSpeedRandom.toFixed(2),
+                        ping: `${pingTime} ms`
+                    }
+                    : res
+            ));
+        }
     };
 
     const downloadPingResults = () => {
         const csvContent = "data:text/csv;charset=utf-8,"
-            + "Kit Name,Status,Download (Mbps),Upload (Mbps)\n"
-            + pingResults.map(r => `${r.name},${r.status},${r.download},${r.upload}`).join("\n");
+            + "Kit Name,Status,Ping,Download (Mbps),Upload (Mbps)\n"
+            + pingResults.map(r => `${r.name},${r.status},${r.ping},${r.download},${r.upload}`).join("\n");
 
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement("a");
@@ -436,6 +470,7 @@ export default function KitDashboard() {
                                             <tr>
                                                 <th className="px-6 py-4">Terminal Name</th>
                                                 <th className="px-6 py-4 text-center">Status</th>
+                                                <th className="px-6 py-4 text-right">Ping</th>
                                                 <th className="px-6 py-4 text-right">Download</th>
                                                 <th className="px-6 py-4 text-right">Upload</th>
                                             </tr>
@@ -455,13 +490,18 @@ export default function KitDashboard() {
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        <span className={`text-xs font-mono font-bold ${res.download === 'OFFLINE' ? 'text-red-500/50' : 'text-gray-300'}`}>
-                                                            {res.download !== 'OFFLINE' ? `${res.download} Mbps` : '---'}
+                                                        <span className={`text-xs font-mono font-bold ${['OFFLINE', '--'].includes(res.ping) ? 'text-red-500/50' : res.ping === 'TESTING...' ? 'text-yellow-500 animate-pulse' : res.ping === 'WAITING...' ? 'text-gray-500' : 'text-gray-300'}`}>
+                                                            {res.ping}
                                                         </span>
                                                     </td>
                                                     <td className="px-6 py-4 text-right">
-                                                        <span className={`text-xs font-mono font-bold ${res.upload === 'OFFLINE' ? 'text-red-500/50' : 'text-gray-300'}`}>
-                                                            {res.upload !== 'OFFLINE' ? `${res.upload} Mbps` : '---'}
+                                                        <span className={`text-xs font-mono font-bold ${['OFFLINE', '--'].includes(res.download) ? 'text-red-500/50' : res.download === 'TESTING...' ? 'text-yellow-500 animate-pulse' : res.download === 'WAITING...' ? 'text-gray-500' : 'text-gray-300'}`}>
+                                                            {['OFFLINE', '--', 'WAITING...', 'TESTING...'].includes(res.download) ? res.download : `${res.download} Mbps`}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-right">
+                                                        <span className={`text-xs font-mono font-bold ${['OFFLINE', '--'].includes(res.upload) ? 'text-red-500/50' : res.upload === 'TESTING...' ? 'text-yellow-500 animate-pulse' : res.upload === 'WAITING...' ? 'text-gray-500' : 'text-gray-300'}`}>
+                                                            {['OFFLINE', '--', 'WAITING...', 'TESTING...'].includes(res.upload) ? res.upload : `${res.upload} Mbps`}
                                                         </span>
                                                     </td>
                                                 </tr>
@@ -570,12 +610,12 @@ export default function KitDashboard() {
                                                                     >
                                                                         <div className="flex items-center gap-3">
                                                                             <div className={`w-1.5 h-1.5 rounded-full ${kit.status === 'Active' ? 'bg-green-500 shadow-[0_0_5px_limegreen] animate-blink' :
-                                                                                kit.status === 'Connecting' ? 'bg-blue-500' : 'bg-gray-500'
+                                                                                kit.status === 'Connecting' ? 'bg-blue-500' : 'bg-red-500'
                                                                                 }`} />
                                                                             <span className="text-xs font-medium text-gray-300">{kit.nickname}</span>
                                                                         </div>
                                                                         <span className={`text-[9px] font-bold uppercase ${kit.status === 'Active' ? 'text-green-500' :
-                                                                            kit.status === 'Connecting' ? 'text-blue-500' : 'text-gray-500'
+                                                                            kit.status === 'Connecting' ? 'text-blue-500' : 'text-red-500'
                                                                             }`}>
                                                                             {kit.status === 'Active' ? 'Online' : kit.status}
                                                                         </span>
